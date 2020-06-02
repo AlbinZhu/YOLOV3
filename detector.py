@@ -11,6 +11,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 import tool
 
+
 class Detector(torch.nn.Module):
 
     def __init__(self, save_path):
@@ -34,7 +35,8 @@ class Detector(torch.nn.Module):
 
         return torch.cat([boxes_13, boxes_26, boxes_52], dim=1)
 
-    def _filter(self, output, threshold):
+    @staticmethod
+    def _filter(output, threshold):
         output = output.permute(0, 2, 3, 1)
         output = output.reshape(output.size(0), output.size(1), output.size(2), 3, -1)
         mask = output[..., 0] > threshold
@@ -42,14 +44,15 @@ class Detector(torch.nn.Module):
         vecs = output[mask]
         return idxs, vecs
 
-    def _parse(self, idxs, vecs, t, anchors):
-        anchors = torch.Tensor(anchors)
+    @staticmethod
+    def _parse(idxs, vecs, t, anchors):
+        anchors = torch.tensor(anchors)
         a = idxs[:, 3]
         confidence = vecs[:, 0]
         _classify = vecs[:, 5:]
 
         if len(_classify) == 0:
-            classify = torch.Tensor([])
+            classify = torch.tensor([])
         else:
             classify = torch.argmax(_classify, dim=1).float()
 
@@ -72,7 +75,7 @@ if __name__ == '__main__':
     img1 = Image.open(r'')
     img = img1.convert("RGB")
     img = np.array(img) / 255
-    img = torch.Tensor(img)
+    img = torch.tensor(img)
     img = img.unsqueeze(0)
     img = img.permute(0, 3, 1, 2)
     img = img.cuda()
