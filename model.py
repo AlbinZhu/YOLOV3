@@ -124,7 +124,7 @@ class Net(torch.nn.Module):
 
         self.detection_13 = torch.nn.Sequential(
             ConvolutionLayer(512, 1024, 3, 1, 1),
-            ConvolutionLayer(1024, 45, 1, 1, 0)
+            ConvolutionLayer(1024, 24, 1, 1, 0)
         )
 
         self.up_26 = torch.nn.Sequential(
@@ -138,7 +138,7 @@ class Net(torch.nn.Module):
 
         self.detection_26 = torch.nn.Sequential(
             ConvolutionLayer(256, 512, 3, 1, 1),
-            ConvolutionLayer(512, 45, 1, 1, 0)
+            ConvolutionLayer(512, 24, 1, 1, 0)
         )
 
         self.up_52 = torch.nn.Sequential(
@@ -152,7 +152,7 @@ class Net(torch.nn.Module):
 
         self.detection_52 = torch.nn.Sequential(
             ConvolutionLayer(128, 256, 3, 1, 1),
-            ConvolutionLayer(256, 45, 1, 1, 0)
+            ConvolutionLayer(256, 24, 1, 1, 0)
         )
 
     def forward(self, x):
@@ -187,4 +187,3 @@ if __name__ == '__main__':
     print(y_26.shape)
     print(y_52.shape)
 
-    pass

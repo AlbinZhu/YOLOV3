@@ -25,11 +25,27 @@ def img_preprocess(image: Image, boxes: np.ndarray = None, size=416):
 
     scale = size / iw
     if boxes is not None:
-        boxes[:, 0] = boxes[:, 0] + x_offset
-        boxes[:, 1] = boxes[:, 1] + y_offset
-        boxes = (boxes * scale).astype(np.int)
+        boxes[:, 1] = boxes[:, 1] + x_offset
+        boxes[:, 2] = boxes[:, 2] + y_offset
+        boxes[:, 1:] = (boxes[:, 1:] * scale).astype(np.int)
+
+    # show_image(new_image, boxes)
     return new_image, boxes
 
+
+def show_image(image, boxes):
+    draw = ImageDraw.Draw(image)
+    for i in range(boxes.shape[0]):
+        box = boxes[i]
+        # w, h = box[2], box[3]
+        _, cx, cy, w, h = box
+        x1 = int(cx - w / 2)
+        y1 = int(cy - h / 2)
+        x2 = x1 + w
+        y2 = y1 + h
+
+        draw.rectangle((x1, y1, x2, y2), outline='red')
+    image.show()
 
 if __name__ == '__main__':
     file = r'D:\datasets\yolodata\001.jpg'

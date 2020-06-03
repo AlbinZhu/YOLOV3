@@ -11,14 +11,13 @@ from torch.utils.data import DataLoader
 from torch.optim import Adam
 import os
 
-def loss_func(output, target, alpha):
 
+def loss_func(output, target, alpha):
     conf_loss = torch.nn.BCEWithLogitsLoss()
     crood_loss = torch.nn.MSELoss()
     cls_loss_fn = torch.nn.CrossEntropyLoss()
 
     output = output.permute(0, 2, 3, 1)
-
 
     output = output.reshape(output.size(0), output.size(1), output.size(2), 3, -1)
     output = output.cpu().double()
@@ -28,7 +27,7 @@ def loss_func(output, target, alpha):
 
     loss_obj_conf = conf_loss(output_obj[:, 0], target_obj[:, 0])
     loss_obj_crood = crood_loss(output_obj[:, 1: 5], target_obj[:, 1: 5])
-    loss_obj_cls = cls_loss_fn(output_obj[:, 5:], target_obj[:, 5:])
+    loss_obj_cls = cls_loss_fn(output_obj[:, 5:], target_obj[:, 5:].argmax(1))
     loss_obj = loss_obj_conf + loss_obj_crood + loss_obj_cls
 
     mask_noobj = target[..., 0] == 0
@@ -39,10 +38,11 @@ def loss_func(output, target, alpha):
 
     return loss
 
+
 if __name__ == '__main__':
     save_path = 'models/net_yolo.pth'
     dataset = MyDataSet()
-    train_loader = DataLoader(dataset, batch_size=2, shuffle=True)
+    train_loader = DataLoader(dataset, batch_size=4, shuffle=True)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     net = Net().to(device)
@@ -67,8 +67,8 @@ if __name__ == '__main__':
 
             opt.zero_grad()
             loss.backward()
-            if epoch % 10 == 0:
-                torch.save(net.state_dict(), save_path)
-                print('save {}'. format(epoch))
             print(loss.item())
         epoch += 1
+        if epoch % 10 == 0:
+            torch.save(net.state_dict(), save_path)
+            print('save {}'.format(epoch))
