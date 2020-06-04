@@ -42,7 +42,7 @@ def loss_func(output, target, alpha):
 if __name__ == '__main__':
     save_path = 'models/net_yolo.pth'
     dataset = MyDataSet()
-    train_loader = DataLoader(dataset, batch_size=4, shuffle=True)
+    train_loader = DataLoader(dataset, batch_size=3, shuffle=True)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     net = Net().to(device)
@@ -67,6 +67,7 @@ if __name__ == '__main__':
 
             opt.zero_grad()
             loss.backward()
+            opt.step()
             print(loss.item())
         epoch += 1
         if epoch % 10 == 0:

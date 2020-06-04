@@ -34,21 +34,24 @@ def img_preprocess(image: Image, boxes: np.ndarray = None, size=416):
 
 
 def show_image(image, boxes):
+    if boxes is None:
+        return
     draw = ImageDraw.Draw(image)
     for i in range(boxes.shape[0]):
         box = boxes[i]
         # w, h = box[2], box[3]
-        _, cx, cy, w, h = box
+        cls, cx, cy, w, h = box
         x1 = int(cx - w / 2)
         y1 = int(cy - h / 2)
         x2 = x1 + w
         y2 = y1 + h
 
         draw.rectangle((x1, y1, x2, y2), outline='red')
+        draw.text((x1, y1), str(int(cls)), fill='red')
     image.show()
 
 if __name__ == '__main__':
-    file = r'D:\datasets\yolodata\001.jpg'
+    file = r'D:\datasets\yolodata\images\029.jpg'
     # file = r"C:\Users\Administrator\Desktop\test.png"
     test_img = Image.open(file)
 

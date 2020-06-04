@@ -13,8 +13,8 @@ import numpy as np
 import config
 import utils
 
-LABEL_FILE_PATH = 'D:\datasets\yolodata\label.txt'
-IMG_BASE_DIR = 'D:\datasets\yolodata\images'
+LABEL_FILE_PATH = 'D:\datasets\yolodata2\label.txt'
+IMG_BASE_DIR = 'D:\datasets\yolodata2\images'
 
 transforms = torchvision.transforms.Compose([
     torchvision.transforms.ToTensor()
@@ -50,7 +50,7 @@ class MyDataSet(Dataset):
         img_data, boxes = utils.img_preprocess(img_data, boxes)
         img_data = transforms(img_data)
 
-        for feature_size, anchors in config.ANCHORS_GROUP.items():
+        for feature_size, anchors in config.ANCHORS_GROUP_KMEANS.items():
             labels[feature_size] = np.zeros(shape=(feature_size, feature_size, 3, 5 + config.CLASS_NUM))
             for box in boxes:
                 cls, cx, cy, w, h = box
@@ -58,7 +58,7 @@ class MyDataSet(Dataset):
                 cy_offset, cy_index = math.modf(cy * feature_size / config.IMG_HEIGHT)
 
                 for i, anchor in enumerate(anchors):
-                    anchor_area = config.ANCHORS_GROUP_AREA[feature_size][i]
+                    anchor_area = config.ANCHORS_GROUP_KMEANS_AREA[feature_size][i]
                     p_w, p_h = w / anchor[0], h / anchor[1]
                     p_area = w * h
                     iou = min(p_area, anchor_area) / max(p_area, anchor_area)
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     print(x)
 
     data = MyDataSet()
-    dataLoader = DataLoader(data, 30, shuffle=True)
+    dataLoader = DataLoader(data, 3, shuffle=True)
 
     for t_13, t_26, t_52, img in dataLoader:
         print(t_13.shape)

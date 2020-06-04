@@ -24,6 +24,12 @@ ANCHORS_GROUP_AREA = {
     52: [x * y for x, y in ANCHORS_GROUP[52]],
 }
 
+ANCHORS_GROUP_KMEANS_AREA = {
+    13: [x * y for x, y in ANCHORS_GROUP_KMEANS[13]],
+    26: [x * y for x, y in ANCHORS_GROUP_KMEANS[26]],
+    52: [x * y for x, y in ANCHORS_GROUP_KMEANS[52]],
+}
+
 if __name__ == '__main__':
 
     for feature_size, anchors in ANCHORS_GROUP.items():

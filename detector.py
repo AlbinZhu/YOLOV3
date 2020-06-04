@@ -7,9 +7,10 @@
 from model import *
 import config
 import torch
-import numpy as np
 from PIL import Image, ImageDraw
 import tool
+from utils import img_preprocess
+import torchvision
 
 
 class Detector(torch.nn.Module):
@@ -33,14 +34,14 @@ class Detector(torch.nn.Module):
         idxs_52, vecs_52 = self._filter(output_52, threshold)
         boxes_52 = self._parse(idxs_52, vecs_52, 8, anchors[52])
 
-        return torch.cat([boxes_13, boxes_26, boxes_52], dim=1)
+        return torch.cat([boxes_13, boxes_26, boxes_52], dim=0)
 
     @staticmethod
     def _filter(output, threshold):
         output = output.permute(0, 2, 3, 1)
         output = output.reshape(output.size(0), output.size(1), output.size(2), 3, -1)
         mask = output[..., 0] > threshold
-        idxs = mask.nonzeros()
+        idxs = torch.nonzero(mask)
         vecs = output[mask]
         return idxs, vecs
 
@@ -59,7 +60,7 @@ class Detector(torch.nn.Module):
         cy = (idxs[:, 1].float() + vecs[:, 2]) * t
         cx = (idxs[:, 2].float() + vecs[:, 1]) * t
         w = anchors[a, 0] * torch.exp(vecs[:, 3])
-        h = anchors[1, 1] * torch.exp(vecs[:, 4])
+        h = anchors[a, 1] * torch.exp(vecs[:, 4])
         x1 = cx - w / 2
         y1 = cy - h / 2
         x2 = x1 + w
@@ -69,18 +70,26 @@ class Detector(torch.nn.Module):
 
 
 if __name__ == '__main__':
-    save_path = r''
+
+    class_map = {0: 'Cat', 1: 'Person', 2: 'Horse'}
+
+    save_path = r'models/net_yolo.pth'
     detector = Detector(save_path)
 
-    img1 = Image.open(r'')
-    img = img1.convert("RGB")
-    img = np.array(img) / 255
-    img = torch.tensor(img)
-    img = img.unsqueeze(0)
-    img = img.permute(0, 3, 1, 2)
-    img = img.cuda()
+    transforms = torchvision.transforms.Compose([
+        torchvision.transforms.ToTensor()
+    ])
 
-    out_value = detector(img, 0.3, config.ANCHORS_GROUP)
+    img1 = Image.open(r'test.jpg')
+    img1, _ = img_preprocess(img1, size=416)
+
+    # img = np.array(img) / 255
+    # img = torch.tensor(img)
+    # img = img.unsqueeze(0)
+    # img = img.permute(0, 3, 1, 2)
+    # img = img.cuda()
+
+    out_value = detector(transforms(img1).unsqueeze(0), 0.3, config.ANCHORS_GROUP_KMEANS)
     boxes = []
 
     for j in range(10):
@@ -90,10 +99,11 @@ if __name__ == '__main__':
 
     for box in boxes:
         try:
-            img_drwa = ImageDraw.ImageDraw(img1)
-            c, x1, y1, x2, y2 = box[0, 0: 5]
-            print(c, x1, y1, x2, y2)
-            img_drwa.rectangle((x1, y1, x2, y2))
+            img_draw = ImageDraw.ImageDraw(img1)
+            c, x1, y1, x2, y2, cls = box[0, 0: 6]
+            print(c.item(), x1.item(), y1.item(), x2.item(), y2.item())
+            img_draw.rectangle((x1.item(), y1.item(), x2.item(), y2.item()), outline='red')
+            img_draw.text((x1.item(), y1.item()), class_map[int(cls.item())], fill='red')
         except:
             continue
     img1.show()
