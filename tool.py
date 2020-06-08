@@ -28,10 +28,10 @@ def iou(box, boxes, is_min=False):
     return ovr
 
 
-def nms(boxes, thresh=0.3, is_min=True):
+def nms(boxes, thresh=0.6, is_min=True):
 
     if boxes.shape[0] == 0:
-        return np.array([])
+        return torch.tensor(np.array([]))
     _boxes = boxes[(-boxes[:, 0]).argsort()]
     r_boxes = []
 

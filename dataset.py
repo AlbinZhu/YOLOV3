@@ -13,8 +13,8 @@ import numpy as np
 import config
 import utils
 
-LABEL_FILE_PATH = 'D:\datasets\yolodata2\label.txt'
-IMG_BASE_DIR = 'D:\datasets\yolodata2\images'
+LABEL_FILE_PATH = 'D:\datasets\yolodata\label.txt'
+IMG_BASE_DIR = 'D:\datasets\yolodata\images'
 
 transforms = torchvision.transforms.Compose([
     torchvision.transforms.ToTensor()
@@ -41,7 +41,6 @@ class MyDataSet(Dataset):
         strs = line.split()
         img_data = Image.open(os.path.join(IMG_BASE_DIR, strs[0]))
 
-        # boxes = np.array(float(a) for a in strs[1:])
         boxes = np.array(list(map(float, strs[1:])))
         boxes = np.split(boxes, len(boxes) // 5)
         boxes = np.stack(boxes)
@@ -74,7 +73,7 @@ if __name__ == '__main__':
     print(x)
 
     data = MyDataSet()
-    dataLoader = DataLoader(data, 3, shuffle=True)
+    dataLoader = DataLoader(data, 1, shuffle=True)
 
     for t_13, t_26, t_52, img in dataLoader:
         print(t_13.shape)

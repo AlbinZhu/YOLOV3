@@ -26,7 +26,11 @@ def loss_func(output, target, alpha):
     target_obj = target[mask_obj]
 
     loss_obj_conf = conf_loss(output_obj[:, 0], target_obj[:, 0])
-    loss_obj_crood = crood_loss(output_obj[:, 1: 5], target_obj[:, 1: 5])
+
+    # output_obj[:, 1: 3] = torch.sigmoid(output_obj[:, 1: 3])
+    loss_obj_crood = crood_loss(torch.sigmoid(output_obj[:, 1: 3]), target_obj[:, 1: 3]) + \
+                     crood_loss(output_obj[:, 3: 5], target_obj[:, 3: 5])
+    # loss_obj_crood = crood_loss(output_obj[:, 1: 5], target_obj[:, 1: 5])
     loss_obj_cls = cls_loss_fn(output_obj[:, 5:], target_obj[:, 5:].argmax(1))
     loss_obj = loss_obj_conf + loss_obj_crood + loss_obj_cls
 
@@ -34,7 +38,7 @@ def loss_func(output, target, alpha):
     output_noobj = output[mask_noobj]
     target_noobj = target[mask_noobj]
     loss_noobj = conf_loss(output_noobj[:, 0], target_noobj[:, 0])
-    loss = alpha * loss_obj + (1 - alpha) * loss_noobj
+    loss = loss_obj + loss_noobj
 
     return loss
 

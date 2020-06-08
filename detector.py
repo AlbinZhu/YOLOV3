@@ -11,6 +11,7 @@ from PIL import Image, ImageDraw
 import tool
 from utils import img_preprocess
 import torchvision
+import numpy as np
 
 
 class Detector(torch.nn.Module):
@@ -49,7 +50,7 @@ class Detector(torch.nn.Module):
     def _parse(idxs, vecs, t, anchors):
         anchors = torch.tensor(anchors)
         a = idxs[:, 3]
-        confidence = vecs[:, 0]
+        confidence = torch.sigmoid(vecs[:, 0])
         _classify = vecs[:, 5:]
 
         if len(_classify) == 0:
@@ -57,8 +58,8 @@ class Detector(torch.nn.Module):
         else:
             classify = torch.argmax(_classify, dim=1).float()
 
-        cy = (idxs[:, 1].float() + vecs[:, 2]) * t
-        cx = (idxs[:, 2].float() + vecs[:, 1]) * t
+        cy = (idxs[:, 1].float() + torch.sigmoid(vecs[:, 2])) * t
+        cx = (idxs[:, 2].float() + torch.sigmoid(vecs[:, 1])) * t
         w = anchors[a, 0] * torch.exp(vecs[:, 3])
         h = anchors[a, 1] * torch.exp(vecs[:, 4])
         x1 = cx - w / 2
@@ -80,30 +81,27 @@ if __name__ == '__main__':
         torchvision.transforms.ToTensor()
     ])
 
-    img1 = Image.open(r'test.jpg')
+    img1 = Image.open(r'D:\datasets\yolodata\images\021.jpg')
     img1, _ = img_preprocess(img1, size=416)
 
-    # img = np.array(img) / 255
-    # img = torch.tensor(img)
-    # img = img.unsqueeze(0)
-    # img = img.permute(0, 3, 1, 2)
-    # img = img.cuda()
-
-    out_value = detector(transforms(img1).unsqueeze(0), 0.3, config.ANCHORS_GROUP_KMEANS)
+    out_value = detector(transforms(img1).unsqueeze(0), 0.5, config.ANCHORS_GROUP_KMEANS)
     boxes = []
 
-    for j in range(10):
+    for j in range(config.CLASS_NUM):
         classify_mask = (out_value[..., -1] == j)
         _boxes = out_value[classify_mask]
-        boxes.append(tool.nms(_boxes))
+        _boxes = tool.nms(_boxes)
+        _boxes = _boxes.detach().numpy().tolist()
+        # boxes.append(tool.nms(_boxes.split()))
+        boxes += _boxes
 
+    img_draw = ImageDraw.ImageDraw(img1)
     for box in boxes:
-        try:
-            img_draw = ImageDraw.ImageDraw(img1)
-            c, x1, y1, x2, y2, cls = box[0, 0: 6]
-            print(c.item(), x1.item(), y1.item(), x2.item(), y2.item())
-            img_draw.rectangle((x1.item(), y1.item(), x2.item(), y2.item()), outline='red')
-            img_draw.text((x1.item(), y1.item()), class_map[int(cls.item())], fill='red')
-        except:
-            continue
+        # try:
+        c, x1, y1, x2, y2, cls = box
+        print(c, x1, y1, x2, y2)
+        img_draw.rectangle((x1, y1, x2, y2), outline='red')
+        img_draw.text((x1, y1), class_map[int(cls)], fill='red')
+        # except e:
+        #     continue
     img1.show()
